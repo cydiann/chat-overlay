@@ -72,7 +72,7 @@ body.preview {
   max-width: 100%;
   box-sizing: border-box;
   margin-top: calc(var(--size) * 0.9);
-  padding: calc(var(--pady) + var(--size) * 0.55) var(--padx) var(--pady);
+  padding: var(--pady) var(--padx);
   border-radius: var(--radius);
   background-color: var(--glass-bg);
   background-image: linear-gradient(180deg, var(--sheen), transparent 45%);
@@ -105,12 +105,16 @@ body.preview {
 
 /* Name pill */
 
+/* In flow so short messages still size the bubble to fit it. The pill is
+   1.65em + 2px tall (moon icon + padding + border); the negative top margin
+   lifts 55% of it above the bubble edge, the bottom margin puts the message
+   text back where it sat below the pill. The right margin keeps the sparkle
+   clear of the pill when horizontal padding is small. */
 .pill {
-  position: absolute;
-  top: 0;
-  left: calc(var(--padx) - 4px);
-  transform: translateY(-55%);
-  display: inline-flex;
+  position: relative;
+  width: max-content;
+  margin: calc(-0.9075em - 1.1px - var(--pady)) max(0px, calc(var(--size) * 0.7 - var(--padx))) calc(var(--pady) - 0.145em - 0.9px) -4px;
+  display: flex;
   align-items: center;
   gap: 0.4em;
   padding: 0.25em 0.85em 0.25em 0.5em;
