@@ -110,10 +110,10 @@ Startup:
 1. Parse settings from the query and the token from the fragment.
 2. Render the four boxes and restore saved names from `name-store`.
 3. If demo mode is on, start the demo and stop here (no token needed).
-4. If there is no token, log a warning and stop (saved names stay on screen).
+4. If there is no token, log a warning and skip the follower steps (saved names stay on screen); IRC still runs.
 5. Connect anonymous IRC to `channel` with `connectChat`. This runs regardless of the token, so the sub, gift and resub boxes work even with no or an expired token.
 6. If there is no token, log a warning and skip the follower steps.
-7. Validate the token; its `user_id` is the moderator ID. Resolve the channel's broadcaster ID with `GET /helix/users?login=<channel>`. On failure, log and skip the follower steps.
+7. Validate the token; its `user_id` is the moderator ID. Resolve the channel's broadcaster ID with `GET /helix/users?login=<channel>`. On a definitive failure (401/403, or an expired/null validate), log and skip the follower steps. A transient failure (network error, or any other error) retries with backoff instead of giving up for the session.
 8. Seed New Follower from `GET https://api.twitch.tv/helix/channels/followers?broadcaster_id=<id>&first=1` (newest first). This value overrides the saved one.
 9. Connect EventSub for follows.
 10. Re-validate every hour. On 401, close EventSub; IRC and the names on screen stay.

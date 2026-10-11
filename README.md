@@ -50,4 +50,4 @@ node --test                   # unit tests, no dependencies
 - Sub, gift and resub boxes can be watched without a login by setting the channel to a big streamer; those notices arrive every few minutes.
 - Follows without waiting for real ones: run the Twitch CLI mock (`nix shell nixpkgs#twitch-cli -c twitch event websocket start-server`), then load `events.html?eventsub=ws://127.0.0.1:8080/ws&api=http://127.0.0.1:8080#token=<your token>` and fire `twitch event trigger channel.follow --transport=websocket`. The token is still validated against Twitch, so use a real one from the settings page.
 
-Every setting is defined once in `js/schema.js`; the overlay's URL parsing and the settings form are both generated from it.
+Every setting is defined once in `js/schema.js` (`js/events-schema.js` for the event boxes overlay); the overlay's URL parsing and the settings form are both generated from it.
