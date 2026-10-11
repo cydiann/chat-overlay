@@ -165,3 +165,51 @@ test("close stops everything", () => {
   assert.equal(latest().closed, true);
   assert.deepEqual(live(), []);
 });
+
+test("a stale socket's refusal is ignored once reconnecting has started", async () => {
+  FakeSocket.instances = [];
+  const logs = [];
+  const timers = [];
+  let nextId = 1;
+  let resolvePost;
+  const postPromise = new Promise(resolve => { resolvePost = resolve; });
+  connectEventSub(
+    {
+      token: "tok", clientId: "cid", broadcasterId: "100", moderatorId: "200",
+      onNotification: () => {}, apiBase: "https://api.test",
+      log: { warn: (...a) => logs.push(a), error: (...a) => logs.push(a) },
+    },
+    {
+      WebSocketImpl: FakeSocket,
+      fetchImpl: async () => postPromise,
+      setTimer: (fn, ms) => {
+        const t = { id: nextId++, fn, ms, cleared: false, fired: false };
+        timers.push(t);
+        return t.id;
+      },
+      clearTimer: id => {
+        const t = timers.find(x => x.id === id);
+        if (t) t.cleared = true;
+      },
+    },
+  );
+  const live = () => timers.filter(t => !t.cleared && !t.fired);
+  const sock = FakeSocket.instances[0];
+  sock.receive(welcome("s1"));
+  sock.close(); // unexpected close while the subscription POST is still in flight
+  resolvePost({ ok: false, status: 400 });
+  await flush();
+  assert.equal(logs.length, 0);
+  assert.deepEqual(live().map(t => t.ms), [1000]);
+});
+
+test("repeated subscription failures grow the backoff", async () => {
+  const { latest, live, fire } = setup({ status: 500 });
+  latest().receive(welcome("s1"));
+  await flush();
+  assert.deepEqual(live().map(t => t.ms), [1000]);
+  fire(live()[0]);
+  latest().receive(welcome("s1"));
+  await flush();
+  assert.deepEqual(live().map(t => t.ms), [2000]);
+});

@@ -92,7 +92,9 @@ export function connectEventSub(
 
   function welcome(ws, session) {
     silenceMs = (session.keepalive_timeout_seconds ?? DEFAULT_KEEPALIVE_S) * 1000 + GRACE_MS;
-    attempt = 0;
+    // A reconnect carries subscriptions over, so its welcome is itself the success signal;
+    // a fresh session only resets the backoff once its subscribe POST actually succeeds.
+    if (ws.isReconnect) attempt = 0;
     if (ws === pending) {
       const old = current;
       current = ws;
@@ -113,14 +115,21 @@ export function connectEventSub(
         body: JSON.stringify(followSubscription(sessionId, broadcasterId, moderatorId)),
       });
     } catch (err) {
+      if (stopped || ws !== current) return;
       log.warn("EventSub follow subscription failed, retrying", err);
-      if (ws === current) drop();
+      drop();
       return;
     }
-    if (stopped || res.ok || res.status === 409) return;
+    // The socket this POST was for may already be gone (closed, superseded by a
+    // reconnect); its outcome no longer applies to whichever socket is live now.
+    if (stopped || ws !== current) return;
+    if (res.ok || res.status === 409) {
+      attempt = 0;
+      return;
+    }
     if (res.status === 429 || res.status >= 500) {
       log.warn(`EventSub follow subscription failed (${res.status}), retrying`);
-      if (ws === current) drop();
+      drop();
       return;
     }
     log.error(`EventSub follow subscription refused (${res.status}); the follower box will not update`);
