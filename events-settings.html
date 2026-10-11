@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Event Boxes Settings</title>
+    <link rel="stylesheet" href="settings.css" />
+    <style>
+      .auth {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+      }
+      .auth p {
+        margin: 0;
+      }
+      #auth-status {
+        flex: 1 1 320px;
+        color: var(--text);
+      }
+      .warn {
+        color: #ffb36b;
+        font-size: 12px;
+      }
+      .layout.wide {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .layout.wide form {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        align-items: start;
+        max-height: none;
+        overflow: visible;
+      }
+      .stage.wide {
+        position: static;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1700 / 330;
+        resize: none;
+      }
+      .stage.wide iframe {
+        width: 1700px;
+        height: 330px;
+        transform-origin: 0 0;
+        transform: scale(var(--scale, 0.5));
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Event boxes settings</h1>
+      <div class="url">
+        <input id="obs-url" readonly aria-label="OBS browser source URL" />
+        <button id="copy" type="button">Copy OBS URL</button>
+      </div>
+    </header>
+    <section class="auth">
+      <button id="connect" type="button">Connect Twitch</button>
+      <p id="auth-status">Checking login…</p>
+      <p class="warn">After you connect, the OBS URL contains your login token after the #. Don't show it on stream.</p>
+    </section>
+    <div class="layout wide">
+      <div class="stage wide"><iframe id="preview" title="Overlay preview"></iframe></div>
+      <form id="form" onsubmit="return false"></form>
+    </div>
+    <script type="module" src="js/events-settings.js"></script>
+  </body>
+</html>
