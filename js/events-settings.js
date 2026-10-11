@@ -54,12 +54,28 @@ async function checkStatus(channel) {
     const days = Math.floor(me.expiresIn / 86400);
     const expiry = me.expiresIn > 0 ? `expires in ${days} day${days === 1 ? "" : "s"}` : "no expiry reported";
     const api = { token, clientId: CLIENT_ID };
-    const { total, name } = await getFollowers(await getUserId(channel, api), api);
-    const access = total > 0 && !name ? `${me.login} is not a moderator of ${channel}, so the follower box will not update` : `can read ${channel}'s followers`;
+    const notMod = `${me.login} is not a moderator of ${channel}, so the follower box will not update`;
+    let access;
+    try {
+      const { total, name } = await getFollowers(await getUserId(channel, api), api);
+      access = total > 0 && !name ? notMod : `can read ${channel}'s followers`;
+    } catch (err) {
+      // Twitch answers 401/403 instead of an empty list when the login can't moderate this channel.
+      if (err.status === 401 || err.status === 403) access = notMod;
+      else throw err;
+    }
     say(`Connected as ${me.login} · ${expiry} · ${access}`);
   } catch (err) {
     say(`Could not check the login: ${err.message}`);
   }
+}
+
+// Dragging a color picker fires onChange dozens of times a second; only re-check Twitch when the channel itself changes.
+let lastChecked;
+function onFormChange(values) {
+  if (values.channel === lastChecked) return;
+  lastChecked = values.channel;
+  checkStatus(values.channel);
 }
 
 const settings = mountSettings({
@@ -67,7 +83,7 @@ const settings = mountSettings({
   overlay: "events.html",
   preview: "events.html",
   fragment: () => tokenHash(token),
-  onChange: values => checkStatus(values.channel),
+  onChange: onFormChange,
 });
 settings.update();
 
