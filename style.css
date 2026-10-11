@@ -1,0 +1,240 @@
+:root {
+  --font-msg: "Urbanist";
+  --font-name: "Marcellus";
+  --size: 14px;
+  --lh: 1.5;
+  --text: #e9edff;
+  --pill-bg: rgba(195, 178, 245, 0.4);
+  --name-text: #fefefe;
+  --glass-bg: rgba(18, 26, 56, 0.5);
+  --blur: 12px;
+  --border-a: rgba(169, 183, 232, 0.55);
+  --border-b: rgba(183, 140, 255, 0.55);
+  --glow: rgba(183, 140, 255, 0.33);
+  --sheen: rgba(255, 255, 255, 0.12);
+  --radius: 16px;
+  --shadow: 25px;
+  --gap: 20px;
+  --padx: 16px;
+  --pady: 10px;
+  --ornament: #c9b6ff;
+  --moon: #f4eddc;
+  --star: #ffffff;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+body.preview {
+  background: radial-gradient(ellipse at 30% 15%, #2a2463 0%, #141433 45%, #07071a 100%);
+}
+
+#stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#chat {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: var(--gap);
+  padding: 28px 30px 24px 22px;
+}
+
+#lines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Bubble */
+
+.bubble {
+  position: relative;
+  flex-shrink: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: calc(var(--size) * 0.9);
+  padding: calc(var(--pady) + var(--size) * 0.55) var(--padx) var(--pady);
+  border-radius: var(--radius);
+  background-color: var(--glass-bg);
+  background-image: linear-gradient(180deg, var(--sheen), transparent 45%);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  box-shadow: 0 0 var(--shadow) var(--glow), inset 0 1px 0 var(--sheen);
+  color: var(--text);
+  font: 600 var(--size) / var(--lh) var(--font-msg), sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  overflow-wrap: anywhere;
+}
+
+/* Gradient border drawn as a masked ring so it follows border-radius. */
+.bubble::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--border-a), var(--border-b));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.body.action {
+  font-style: italic;
+}
+
+/* Name pill */
+
+.pill {
+  position: absolute;
+  top: 0;
+  left: calc(var(--padx) - 4px);
+  transform: translateY(-55%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.25em 0.85em 0.25em 0.5em;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--name-text);
+  font: 400 calc(var(--size) * 0.92) / 1 var(--font-name), serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+}
+
+.pill .moon {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+.moon .dark {
+  fill: var(--moon);
+  opacity: 0.22;
+}
+
+.moon .lit {
+  fill: var(--moon);
+  filter: drop-shadow(0 0 2px var(--moon));
+}
+
+.role {
+  font-size: 0.85em;
+  color: var(--moon);
+}
+
+/* Ornaments */
+
+.orn {
+  position: absolute;
+  fill: var(--ornament);
+  filter: drop-shadow(0 0 4px var(--ornament));
+  pointer-events: none;
+}
+
+.sparkle {
+  top: 0;
+  right: 0;
+  width: calc(var(--size) * 1.1);
+  height: calc(var(--size) * 1.1);
+  transform: translate(40%, -40%);
+}
+
+.crescent {
+  bottom: 0;
+  left: 0;
+  width: calc(var(--size) * 0.8);
+  height: calc(var(--size) * 0.8);
+  transform: translate(-45%, 35%);
+}
+
+/* Emotes */
+
+.emote {
+  height: calc(var(--size) * 1.75);
+  vertical-align: middle;
+  margin: -0.3em 0;
+}
+
+.big-emotes .emote {
+  height: calc(var(--size) * 3);
+}
+
+.emote-stack {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.emote-stack .overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
+
+/* Motion */
+
+.bubble.enter {
+  animation: bubble-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.bubble.enter .sparkle {
+  animation: sparkle-in 0.9s ease-out 0.15s both;
+}
+
+.bubble.leave {
+  animation: bubble-out 0.5s ease-in forwards;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}
+
+@keyframes sparkle-in {
+  0% {
+    transform: translate(40%, -40%) scale(0) rotate(-90deg);
+  }
+  60% {
+    transform: translate(40%, -40%) scale(1.4) rotate(15deg);
+  }
+  100% {
+    transform: translate(40%, -40%) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes bubble-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
