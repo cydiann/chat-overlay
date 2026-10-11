@@ -95,7 +95,7 @@ The token is not a schema field, so it can never end up in the query string. `se
 
 ## Login (settings page)
 
-1. `CLIENT_ID` is a constant in `js/auth.js` (client IDs are public), from a dedicated "Chat Overlay" Twitch app. While empty, the Connect Twitch button is disabled with a note pointing to the README. The app's category and client type do not matter for this flow.
+1. `CLIENT_ID` is a constant in `js/auth.js` (client IDs are public), from the dedicated `chat-overlay` Twitch app (Public client): `7cc4880z454947qrnfi3z0w493ta4s`.
 2. Connect Twitch redirects to `https://id.twitch.tv/oauth2/authorize` with `response_type=token`, `client_id`, `redirect_uri` = the current `events-settings.html` URL without query or fragment, the scope, and a random `state` saved in `sessionStorage`.
 3. On return the page reads `access_token` and `state` from the fragment, rejects a state mismatch, puts the token into the config, and rewrites the address bar to `?<settings>#token=<token>`.
 4. It calls `GET https://id.twitch.tv/oauth2/validate`, then `GET /helix/users?login=<channel>` and `GET /helix/channels/followers?broadcaster_id=<id>&first=1`. It shows "Connected as <login>, expires in N days, can read <channel>'s followers", or a clear error: invalid token, missing scope, or "<login> is not a moderator of <channel>" when the followers call returns no data or is refused.
