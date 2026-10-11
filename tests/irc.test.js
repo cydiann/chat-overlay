@@ -82,3 +82,25 @@ test("toEvent maps moderation and room commands", () => {
 test("toEvent ignores other commands", () => {
   assert.equal(toEvent(parseLine(":tmi.twitch.tv 001 justinfan123 :Welcome, GLHF!")), null);
 });
+
+const RESUB =
+  "@badge-info=subscriber/6;badges=subscriber/6;color=#008000;display-name=Ronni;emotes=;id=db25007f;login=ronni;mod=0;" +
+  "msg-id=resub;msg-param-cumulative-months=6;room-id=12345678;system-msg=ronni\\shas\\ssubscribed\\sfor\\s6\\smonths!;user-id=87654321 " +
+  ":tmi.twitch.tv USERNOTICE #lennelen :Great stream -- keep it up!";
+const BULK_SUBGIFT =
+  "@display-name=TWW2;id=e9176cd8;login=tww2;msg-id=subgift;msg-param-community-gift-id=2939021;" +
+  "msg-param-recipient-display-name=Mr_Woodchuck;msg-param-recipient-name=mr_woodchuck;room-id=1;user-id=2 " +
+  ":tmi.twitch.tv USERNOTICE #lennelen";
+
+test("toEvent builds a usernotice event", () => {
+  assert.deepEqual(toEvent(parseLine(RESUB)), {
+    type: "usernotice", msgId: "resub", login: "ronni", displayName: "Ronni", communityGiftId: "",
+  });
+});
+
+test("usernotice keeps the community gift id and falls back to login", () => {
+  const ev = toEvent(parseLine(BULK_SUBGIFT.replace("display-name=TWW2;", "display-name=;")));
+  assert.equal(ev.displayName, "tww2");
+  assert.equal(ev.communityGiftId, "2939021");
+  assert.equal(ev.msgId, "subgift");
+});

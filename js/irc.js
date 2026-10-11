@@ -75,6 +75,16 @@ export function toEvent(msg) {
         : { type: "clearall" };
     case "ROOMSTATE":
       return { type: "roomstate", roomId: tags["room-id"] ?? "" };
+    case "USERNOTICE": {
+      const login = tags.login ?? "";
+      return {
+        type: "usernotice",
+        msgId: tags["msg-id"] ?? "",
+        login,
+        displayName: tags["display-name"] || login,
+        communityGiftId: tags["msg-param-community-gift-id"] ?? "",
+      };
+    }
     case "PING":
       return { type: "ping", payload: params[0] ?? "" };
     case "RECONNECT":
