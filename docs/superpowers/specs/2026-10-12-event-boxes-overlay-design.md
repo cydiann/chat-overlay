@@ -89,13 +89,13 @@ The token is not a schema field, so it can never end up in the query string. `se
 
 ## Login (settings page)
 
-1. `CLIENT_ID` is a constant in `js/auth.js` (client IDs are public). While empty, the Connect Twitch button is disabled with a note pointing to the README.
+1. `CLIENT_ID` is a constant in `js/auth.js` (client IDs are public): `gp762nuuoqcoxypju8c569th9wz7q5`, the LennBot Twitch app, reused so there is one app to manage. Authorizing the broadcaster here does not revoke any token LennBot already holds.
 2. Connect Twitch redirects to `https://id.twitch.tv/oauth2/authorize` with `response_type=token`, `client_id`, `redirect_uri` = the current `events-settings.html` URL without query or fragment, both scopes, and a random `state` saved in `sessionStorage`.
 3. On return the page reads `access_token` and `state` from the fragment, rejects a state mismatch, puts the token into the config, and rewrites the address bar to `?<settings>#token=<token>`.
 4. It calls `GET https://id.twitch.tv/oauth2/validate` and shows "Connected as <login>, expires in N days", or an error for missing scopes or an invalid token.
 5. Copy OBS URL produces `events.html?<settings>#token=<token>`. A one-line warning says not to show this URL on stream.
 
-The Twitch app needs two redirect URLs registered: the GitHub Pages `events-settings.html` URL and `http://localhost:8000/events-settings.html`.
+The LennBot app needs two more OAuth redirect URLs added in the Twitch developer console: the GitHub Pages `events-settings.html` URL and `http://localhost:8000/events-settings.html`.
 
 ## Data flow (overlay)
 
