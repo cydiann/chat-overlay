@@ -6,11 +6,15 @@ export function mapFollow(payload) {
   return payload?.subscription?.type === "channel.follow" && name ? { box: "follower", name } : null;
 }
 
+function gifterName(ev) {
+  return ev.login === ANON_LOGIN ? "Anonymous" : ev.displayName;
+}
+
 function gifter(ev) {
   // A mystery gift sends one submysterygift and then a subgift per recipient tagged with the same
   // community gift id; only the submysterygift should credit the gifter.
   if (ev.communityGiftId) return null;
-  return { box: "gifter", name: ev.login === ANON_LOGIN ? "Anonymous" : ev.displayName };
+  return { box: "gifter", name: gifterName(ev) };
 }
 
 export function mapUsernotice(ev) {
@@ -21,12 +25,15 @@ export function mapUsernotice(ev) {
     case "resub":
       return { box: "resub", name: ev.displayName };
     case "submysterygift":
-      return { box: "gifter", name: ev.login === ANON_LOGIN ? "Anonymous" : ev.displayName };
+      // The mystery gift notice itself carries the community gift id, so unlike subgift it
+      // always credits the gifter here.
+      return { box: "gifter", name: gifterName(ev) };
     case "subgift":
       return gifter(ev);
     case "anonsubgift":
-    case "anonsubmysterygift":
       return ev.communityGiftId ? null : { box: "gifter", name: "Anonymous" };
+    case "anonsubmysterygift":
+      return { box: "gifter", name: "Anonymous" };
     default:
       return null;
   }

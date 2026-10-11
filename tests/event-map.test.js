@@ -28,6 +28,17 @@ test("a mystery gift credits the gifter", () => {
   assert.deepEqual(mapUsernotice(notice("submysterygift", anon)), { box: "gifter", name: "Anonymous" });
 });
 
+test("a mystery gift still credits the gifter when it carries a community gift id", () => {
+  assert.deepEqual(
+    mapUsernotice(notice("submysterygift", { communityGiftId: "2939021" })),
+    { box: "gifter", name: "CometCass" },
+  );
+  assert.deepEqual(
+    mapUsernotice(notice("submysterygift", { ...anon, communityGiftId: "2939021" })),
+    { box: "gifter", name: "Anonymous" },
+  );
+});
+
 test("subgifts that belong to a mystery gift are ignored", () => {
   assert.equal(mapUsernotice(notice("subgift", { communityGiftId: "2939021" })), null);
 });
@@ -41,6 +52,10 @@ test("legacy anonymous gift ids credit Anonymous", () => {
   assert.deepEqual(mapUsernotice(notice("anonsubgift")), { box: "gifter", name: "Anonymous" });
   assert.deepEqual(mapUsernotice(notice("anonsubmysterygift")), { box: "gifter", name: "Anonymous" });
   assert.equal(mapUsernotice(notice("anonsubgift", { communityGiftId: "9" })), null);
+  assert.deepEqual(
+    mapUsernotice(notice("anonsubmysterygift", { communityGiftId: "9" })),
+    { box: "gifter", name: "Anonymous" },
+  );
 });
 
 test("other notices and events are ignored", () => {
