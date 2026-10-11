@@ -32,8 +32,11 @@ function attachZeroWidth(tokens, name, url) {
   return true;
 }
 
+// Chatterino/7TV append U+E0000 (some clients U+034F) to dodge Twitch's duplicate-message filter.
+const BYPASS_CHARS = /[\u{E0000}\u034F]/gu;
+
 function pushWords(tokens, segment, emoteMap) {
-  for (const part of segment.split(/(\s+)/)) {
+  for (const part of segment.replace(BYPASS_CHARS, "").split(/(\s+)/)) {
     if (part === "") continue;
     const found = emoteMap.get(part);
     if (!found) appendText(tokens, part);
@@ -44,6 +47,7 @@ function pushWords(tokens, segment, emoteMap) {
 }
 
 // Twitch emote ranges index Unicode code points, so slice an Array.from() copy, not the string.
+// Bypass characters are dropped per text segment, after slicing, so they never shift the ranges.
 export function tokenize(text, emotesTag, emoteMap) {
   const chars = Array.from(text);
   const tokens = [];

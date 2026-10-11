@@ -74,3 +74,18 @@ test("isEmoteOnly ignores whitespace", () => {
   assert.equal(isEmoteOnly(tokenize("Kappa hi", "25:0-4", map)), false);
   assert.equal(isEmoteOnly(tokenize("   ", "", map)), false);
 });
+
+test("duplicate-message bypass characters are dropped", () => {
+  const twitch = tokenize("Kappa \u{E0000}", "25:0-4", map);
+  assert.equal(isEmoteOnly(twitch), true);
+  assert.deepEqual(twitch, [emote("Kappa", KAPPA), { type: "text", text: " " }]);
+  assert.equal(isEmoteOnly(tokenize("catJAM \u{E0000}", "", map)), true);
+  assert.equal(isEmoteOnly(tokenize("catJAM ͏", "", map)), true);
+});
+
+test("bypass characters before an emote do not shift its range", () => {
+  assert.deepEqual(tokenize("\u{E0000} Kappa", "25:2-6", map), [
+    { type: "text", text: " " },
+    emote("Kappa", KAPPA),
+  ]);
+});
