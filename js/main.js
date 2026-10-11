@@ -5,8 +5,11 @@ import { loadEmotes } from "./emotes.js";
 import { tokenize } from "./tokenize.js";
 import { createBubble } from "./render.js";
 import { startDemo } from "./demo.js";
+import { renderStarfield, startShootingStars, sparklePop, drawConstellation } from "./effects.js";
 
 const chat = document.getElementById("chat");
+const stars = document.getElementById("stars");
+const lines = document.getElementById("lines");
 
 const LEAVE_MS = 500; // matches .bubble.leave animation in style.css
 const loadedFonts = new Set();
@@ -35,6 +38,7 @@ function applyConfig(next) {
   loadFont(config.font);
   loadFont(config.namefont);
   document.body.classList.toggle("preview", config.bg);
+  if (!prev || prev.stars !== config.stars || prev.starcount !== config.starcount) renderStarfield(stars, config);
   if (!prev || prev.channel !== config.channel) connect();
   if (!prev || prev.demo !== config.demo) toggleDemo();
 }
@@ -88,8 +92,11 @@ function liveBubbles() {
 
 function showMessage(ev) {
   if (isHidden(ev)) return;
+  const previous = liveBubbles().at(-1);
   const bubble = createBubble(ev, tokenize(ev.text, ev.emotes, emoteMap), config);
   chat.append(bubble);
+  if (config.sparkles) sparklePop(bubble);
+  if (config.constellation && previous) requestAnimationFrame(() => drawConstellation(lines, previous, bubble));
   const live = liveBubbles();
   while (live.length > config.max) fadeOut(live.shift());
   if (config.fade > 0) bubble.fadeTimer = setTimeout(() => fadeOut(bubble), config.fade * 1000);
@@ -117,3 +124,4 @@ window.addEventListener("message", e => {
 });
 
 applyConfig(parseConfig(location.search));
+startShootingStars(stars, () => config);
