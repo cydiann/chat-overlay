@@ -12,6 +12,8 @@ Twitch chat as celestial frosted-glass bubbles, for an OBS browser source. Shows
 3. Leave "Shutdown source when not visible" off so chat keeps flowing.
 4. To change settings later, open `settings.html?<the query part of your OBS URL>`, adjust, copy again.
 
+The glass blur only blurs the overlay's own content (the stars), not the game behind the browser source, so in OBS the glass reads as a tint at the glass opacity. Raise Glass opacity if it looks too faint.
+
 New 7TV emotes added mid-stream show up after you refresh the browser source.
 
 ## Development
