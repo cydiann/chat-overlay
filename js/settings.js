@@ -53,6 +53,10 @@ function update() {
   output.value = obsUrl();
   const query = serializeConfig({ ...values, ...LIVE });
   history.replaceState(null, "", query ? `?${query}` : location.pathname);
+  updatePreview();
+}
+
+function updatePreview() {
   preview.contentWindow?.postMessage({ type: "config", values: { ...values, ...PREVIEW } }, location.origin);
 }
 
@@ -94,5 +98,7 @@ copyButton.addEventListener("click", async () => {
 });
 
 buildForm();
+// Edits made while the preview was still loading would otherwise be lost.
+preview.addEventListener("load", updatePreview);
 preview.src = `index.html?${serializeConfig({ ...values, ...PREVIEW })}`;
 output.value = obsUrl();

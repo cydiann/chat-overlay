@@ -41,6 +41,7 @@ function applyConfig(next) {
   if (!prev || prev.stars !== config.stars || prev.starcount !== config.starcount) renderStarfield(stars, config);
   if (!prev || prev.channel !== config.channel) connect();
   if (!prev || prev.demo !== config.demo) toggleDemo();
+  trimToMax();
 }
 
 // Demo mode stays connected so the preview can use the channel's real emotes.
@@ -62,7 +63,10 @@ function onEvent(ev) {
       if (ev.roomId && ev.roomId !== roomId) {
         const id = (roomId = ev.roomId);
         loadEmotes(id).then(map => {
-          if (roomId === id) emoteMap = map;
+          if (roomId !== id) return;
+          emoteMap = map;
+          // Every provider failed (e.g. OBS started before the network): retry on the next join.
+          if (map.size === 0) roomId = null;
         });
       }
       break;
@@ -97,9 +101,13 @@ function showMessage(ev) {
   chat.append(bubble);
   if (config.sparkles) sparklePop(bubble);
   if (config.constellation && previous) requestAnimationFrame(() => drawConstellation(lines, previous, bubble));
+  trimToMax();
+  if (config.fade > 0) bubble.fadeTimer = setTimeout(() => fadeOut(bubble), config.fade * 1000);
+}
+
+function trimToMax() {
   const live = liveBubbles();
   while (live.length > config.max) fadeOut(live.shift());
-  if (config.fade > 0) bubble.fadeTimer = setTimeout(() => fadeOut(bubble), config.fade * 1000);
 }
 
 function fadeOut(bubble) {
