@@ -64,7 +64,7 @@ function refit() {
 function show(update, animate = true) {
   if (!update) return;
   setName(slots.get(update.box), update.name, animate);
-  if (!config.demo) store.save(update.box, update.name);
+  if (!config.demo) store.save(update.box, update.name, update.at);
 }
 
 function stop() {
@@ -80,7 +80,7 @@ function stop() {
 function start() {
   stop();
   store = createNameStore(config.channel);
-  for (const key of BOXES) setName(slots.get(key), config.demo ? "" : store.load(key) ?? "", false);
+  for (const key of BOXES) setName(slots.get(key), config.demo ? "" : store.load(key)?.name ?? "", false);
   if (config.demo) {
     demo = startEventsDemo(update => show(update));
     return;
