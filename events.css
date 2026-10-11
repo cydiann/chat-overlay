@@ -1,0 +1,135 @@
+/* Defaults; js/events-main.js overwrites these from the settings. */
+:root {
+  --title-size: 44px;
+  --title-color: #eef3ff;
+  --glow: #4f6dff;
+  --name-font: "Quicksand";
+  --name-size: 22px;
+  --name-color: #ffffff;
+  --box-w: 306px;
+  --box-h: 60px;
+  --gap: 66px;
+  --fill-a: #ab97b2;
+  --fill-b: #a293cc;
+  --border-a: #a9d3e3;
+  --border-b: #efeaf6;
+  --shadow: rgba(60, 40, 90, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+body.preview {
+  background: #f4f2f8;
+}
+
+#row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  height: 100%;
+  /* The titles overhang the boxes' top edge; keep the whole strip visually centered. */
+  padding-top: calc(var(--title-size) * 0.4);
+}
+
+.slot {
+  position: relative;
+  flex: none;
+  width: var(--box-w);
+  height: var(--box-h);
+  filter: drop-shadow(0 10px 28px var(--shadow));
+}
+
+.box {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, var(--fill-a), var(--fill-b));
+  border: 3px solid;
+  border-image: linear-gradient(90deg, var(--border-a), var(--border-b)) 1;
+}
+
+.title {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -73%);
+  white-space: nowrap;
+  font: var(--title-size) / 1 "MoonTime", "Neonderthaw", cursive;
+  color: var(--title-color);
+  text-shadow: 0 0 2px #fff, 0 0 6px var(--glow), 0 0 14px var(--glow), 0 0 26px var(--glow);
+  pointer-events: none;
+}
+
+.name {
+  position: absolute;
+  inset: 3px 14px;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 6px;
+}
+
+.slide.scrolling {
+  justify-content: flex-start;
+}
+
+.slide.in {
+  animation: slide-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.slide.out {
+  animation: slide-out 0.4s ease-in both;
+}
+
+.text {
+  display: inline-block;
+  white-space: nowrap;
+  font: 600 var(--name-size) / 1.2 var(--name-font), sans-serif;
+  color: var(--name-color);
+  text-shadow: 0 1px 3px rgba(40, 20, 70, 0.45);
+}
+
+.slide.scrolling .text {
+  animation: name-scroll var(--scroll-ms) ease-in-out infinite alternate;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-out {
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes name-scroll {
+  0%,
+  15% {
+    transform: none;
+  }
+  85%,
+  100% {
+    transform: translateX(var(--scroll));
+  }
+}
