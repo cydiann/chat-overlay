@@ -12,9 +12,12 @@ export const FONTS = {
 
 const fontOptions = Object.keys(FONTS);
 
+// Accepts pasted "#name", "@name" and channel URLs. The pattern also keeps anything else out of the IRC JOIN line.
+const channelName = s => s.replace(/\/+$/, "").replace(/^.*\//, "").replace(/^[#@]/, "").toLowerCase();
+
 // Order matters: settings form groups and serialized query order follow it.
 export const SCHEMA = [
-  { key: "channel", group: "Behavior", type: "text", default: "lennelen", required: true, label: "Twitch channel" },
+  { key: "channel", group: "Behavior", type: "text", default: "lennelen", clean: channelName, pattern: /^[a-z0-9_]{1,25}$/, label: "Twitch channel" },
   { key: "fade", group: "Behavior", type: "number", default: 30, min: 0, max: 600, label: "Fade after (seconds, 0 = never)" },
   { key: "max", group: "Behavior", type: "number", default: 8, min: 1, max: 50, label: "Max messages on screen" },
   { key: "hide", group: "Behavior", type: "text", default: "", label: "Hidden users (comma separated)" },

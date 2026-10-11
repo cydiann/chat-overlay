@@ -23,8 +23,10 @@ function coerce(field, raw) {
     }
     case "select":
       return field.options.includes(s) ? s : field.default;
-    default:
-      return s === "" && field.required ? field.default : s;
+    default: {
+      const v = field.clean ? field.clean(s) : s;
+      return field.pattern && !field.pattern.test(v) ? field.default : v;
+    }
   }
 }
 

@@ -14,7 +14,7 @@ test("parses typed values", () => {
   assert.equal(c.namecolor, true);
   assert.equal(c.pill, "#ff0000");
   assert.equal(c.font, "Poppins");
-  assert.equal(c.channel, "Someone");
+  assert.equal(c.channel, "someone");
   assert.equal(c.lh, 1.2);
 });
 
@@ -62,4 +62,22 @@ test("cssVars maps values to custom properties", () => {
   assert.equal(vars["--font-name"], '"Marcellus"');
   assert.equal(vars["--border-a"], "rgba(169, 183, 232, 0.55)");
   assert.equal(vars["--sheen"], "rgba(255, 255, 255, 0.12)");
+});
+
+test("channel accepts pasted forms and normalizes them", () => {
+  for (const raw of ["#lennelen", "@lennelen", "twitch.tv/lennelen", "https://www.twitch.tv/lennelen", "  LenneLen  ", "https://www.twitch.tv/lennelen/"]) {
+    assert.equal(normalize({ channel: raw }).channel, "lennelen", raw);
+  }
+  assert.equal(normalize({ channel: "#Some_One42" }).channel, "some_one42");
+});
+
+test("invalid channels fall back to the default", () => {
+  for (const raw of ["", "   ", "two words", "lennelen\r\nJOIN #other", "a".repeat(26), "bad-name"]) {
+    assert.equal(normalize({ channel: raw }).channel, "lennelen", JSON.stringify(raw));
+  }
+  assert.equal(parseConfig("?channel=x%0D%0APRIVMSG").channel, "lennelen");
+});
+
+test("plain text fields are left as typed", () => {
+  assert.equal(normalize({ hide: "NightBot, LennBot" }).hide, "NightBot, LennBot");
 });
