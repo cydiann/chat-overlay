@@ -4,6 +4,7 @@ import { loadFont } from "./fonts.js";
 import { BOXES, mapFollow, mapUsernotice } from "./event-map.js";
 import { createBox, setTitle, setName, fitName } from "./boxes.js";
 import { createNameStore } from "./name-store.js";
+import { mergeHistory, fetchHistory } from "./history.js";
 import { connectChat, backoffDelay } from "./twitch.js";
 import { connectEventSub } from "./eventsub.js";
 import { CLIENT_ID, tokenFromHash, validateToken } from "./auth.js";
@@ -86,11 +87,30 @@ function start() {
     return;
   }
   chat = connectChat(config.channel, ev => show(mapUsernotice(ev)));
+  if (config.history) loadHistory(session);
   if (!token) {
     console.warn("Event boxes: no Twitch login, the follower box will not update");
     return;
   }
   startFollows(session);
+}
+
+function cachedEntries() {
+  return Object.fromEntries(BOXES.map(key => [key, store.load(key)]));
+}
+
+// Compares against the cache when the reply arrives, not at startup, so a live event that
+// lands while the request is in flight is not overwritten by an older recorded one.
+async function loadHistory(mine) {
+  let remote;
+  try {
+    remote = await fetchHistory(config.history);
+  } catch (err) {
+    console.warn("Event boxes: could not load recent events, keeping the cached names", err);
+    return;
+  }
+  if (mine !== session) return;
+  for (const update of mergeHistory(cachedEntries(), remote)) show(update, false);
 }
 
 // A transient failure (network blip, Twitch hiccup) retries with backoff; a definitive "this

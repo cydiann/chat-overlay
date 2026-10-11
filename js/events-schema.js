@@ -4,6 +4,7 @@ import { hexToRgba } from "./color.js";
 // Order matters: settings form groups and serialized query order follow it.
 export const EVENTS_SCHEMA = [
   CHANNEL_FIELD,
+  { key: "history", group: "Behavior", type: "text", default: "https://lennbot-production.up.railway.app/event-boxes", label: "Recent events URL (empty turns it off)" },
 
   { key: "tfollow", group: "Titles", type: "text", default: "New Follower", label: "Follower box title" },
   { key: "tsub", group: "Titles", type: "text", default: "New Subscriber", label: "Subscriber box title" },

@@ -34,6 +34,8 @@ The OBS URL carries the login token after the `#`. Browsers never send that part
 
 Resubs only show up when the viewer shares the resub message in chat. That is how Twitch reports them.
 
+The sub, gifter and resub boxes also load the latest names from LennBot at startup (the **Recent events URL** setting, on by default), so they survive a cleared OBS browser cache. LennBot records every sub, gift and resub in the channel, even while the overlay is closed. A cached name is replaced only when LennBot's is newer. Clear the setting to turn this off.
+
 The Twitch app behind the login is `chat-overlay` in the Twitch developer console. Its OAuth redirect URLs must include `https://cydiann.github.io/chat-overlay/events-settings.html` and `http://localhost:8000/events-settings.html`.
 
 ## Development

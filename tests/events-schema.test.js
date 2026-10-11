@@ -47,3 +47,9 @@ test("schema keys are unique", () => {
   const keys = EVENTS_SCHEMA.map(f => f.key);
   assert.equal(new Set(keys).size, keys.length);
 });
+
+test("history defaults to LennBot and can be turned off", () => {
+  assert.equal(d().history, "https://lennbot-production.up.railway.app/event-boxes");
+  const off = { ...d(), history: "" };
+  assert.equal(parseConfig("?" + serializeConfig(off, EVENTS_SCHEMA), EVENTS_SCHEMA).history, "");
+});
