@@ -37,7 +37,9 @@ chat-overlay/
   settings.html     settings form + live preview iframe
   style.css         theme; all tunables are CSS custom properties
   js/schema.js      single settings schema: key, type, default, label, group
+  js/color.js       pure hex helpers: validate, hex+opacity -> rgba, mix with white
   js/config.js      parse URL params against schema; serialize non-default values
+  js/settings.js    settings page: build form, post config to preview, copy URL
   js/irc.js         pure IRC line + tag parser
   js/twitch.js      anonymous WebSocket client (connect, join, reconnect)
   js/emotes.js      fetch 7TV/BTTV/FFZ sets into one name -> url map
@@ -132,13 +134,13 @@ Fonts load from Google Fonts. Both font settings are dropdowns of a curated list
 - Single left-aligned column anchored to the bottom of the source; new bubbles append at the bottom and older ones move up.
 - Enter: slide up + fade in (~300ms), sparkle pop (scale + rotate burst, a few particles drifting up and fading).
 - Constellation line: on enter, a dotted SVG line draws from the previous bubble's pill to the new pill, holds briefly, fades.
-- Exit: after `fade` seconds, fade out then collapse height (so the column eases down). Exceeding `max` removes the oldest immediately with the same exit animation.
+- Exit: after `fade` seconds, fade out (~500ms) then remove. The column is bottom-anchored, so removing the oldest (top) bubble shifts nothing and no height collapse is needed. Exceeding `max` starts the same exit on the oldest bubble immediately. Moderation removals are instant, with no animation.
 - Starfield: absolutely positioned layer behind the column, stars at random positions with staggered twinkle. Shooting star at random 8 to 20 s intervals.
 - Background is transparent unless preview background is on (night-sky gradient, for demo/settings only).
 
 ## Settings page
 
-- Form generated from `schema.js`, grouped as in the table above. Inputs: color pickers, number fields, toggles, dropdowns, text.
+- Form generated from `schema.js`, grouped as in the table above, except the Demo group (the preview always runs with demo and preview background on, and the copied URL always has them off). Inputs: color pickers, number fields, toggles, dropdowns, text. Text fields apply on `change`, everything else on `input`.
 - Right side: `<iframe src="index.html?demo=1&bg=1&...">`. Form changes are sent with `postMessage({type: "config", values})`; the overlay applies them live without reload. The overlay only accepts messages from its own origin.
 - "Copy OBS URL" writes `https://cydiann.github.io/chat-overlay/?<non-default params>` to the clipboard, always omitting `demo` and `bg`.
 - Opening `settings.html?<params>` pre-fills the form, so a pasted OBS URL's query can be edited later.
