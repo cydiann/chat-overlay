@@ -1,5 +1,5 @@
 import { parseConfig, normalize, cssVars } from "./config.js";
-import { FONTS } from "./schema.js";
+import { loadFont } from "./fonts.js";
 import { connectChat } from "./twitch.js";
 import { loadEmotes } from "./emotes.js";
 import { tokenize } from "./tokenize.js";
@@ -12,22 +12,12 @@ const stars = document.getElementById("stars");
 const lines = document.getElementById("lines");
 
 const LEAVE_MS = 500; // matches .bubble.leave animation in style.css
-const loadedFonts = new Set();
 
 let config = null;
 let emoteMap = new Map();
 let roomId = null;
 let connection = null;
 let demo = null;
-
-function loadFont(family) {
-  if (loadedFonts.has(family)) return;
-  loadedFonts.add(family);
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, "+")}:wght@${FONTS[family]}&display=swap`;
-  document.head.append(link);
-}
 
 function applyConfig(next) {
   const prev = config;

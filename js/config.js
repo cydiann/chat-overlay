@@ -1,8 +1,8 @@
 import { SCHEMA } from "./schema.js";
 import { isHex, hexToRgba } from "./color.js";
 
-export function defaults() {
-  return Object.fromEntries(SCHEMA.map(field => [field.key, field.default]));
+export function defaults(schema = SCHEMA) {
+  return Object.fromEntries(schema.map(field => [field.key, field.default]));
 }
 
 function coerce(field, raw) {
@@ -30,22 +30,22 @@ function coerce(field, raw) {
   }
 }
 
-export function normalize(input) {
-  const values = defaults();
-  for (const field of SCHEMA) {
+export function normalize(input, schema = SCHEMA) {
+  const values = defaults(schema);
+  for (const field of schema) {
     const raw = input[field.key];
     if (raw !== undefined && raw !== null) values[field.key] = coerce(field, raw);
   }
   return values;
 }
 
-export function parseConfig(search) {
-  return normalize(Object.fromEntries(new URLSearchParams(search)));
+export function parseConfig(search, schema = SCHEMA) {
+  return normalize(Object.fromEntries(new URLSearchParams(search)), schema);
 }
 
-export function serializeConfig(values) {
+export function serializeConfig(values, schema = SCHEMA) {
   const params = new URLSearchParams();
-  for (const field of SCHEMA) {
+  for (const field of schema) {
     const v = values[field.key];
     if (v === undefined || v === field.default) continue;
     if (field.type === "bool") params.set(field.key, v ? "1" : "0");

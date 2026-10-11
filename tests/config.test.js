@@ -81,3 +81,14 @@ test("invalid channels fall back to the default", () => {
 test("plain text fields are left as typed", () => {
   assert.equal(normalize({ hide: "NightBot, LennBot" }).hide, "NightBot, LennBot");
 });
+
+test("config functions accept another schema", () => {
+  const schema = [
+    { key: "a", group: "G", type: "number", default: 1, min: 0, max: 10, label: "A" },
+    { key: "b", group: "G", type: "text", default: "x", label: "B" },
+  ];
+  assert.deepEqual(defaults(schema), { a: 1, b: "x" });
+  assert.deepEqual(parseConfig("?a=5&fade=10", schema), { a: 5, b: "x" });
+  assert.deepEqual(normalize({ a: 99 }, schema), { a: 1, b: "x" });
+  assert.equal(serializeConfig({ a: 5, b: "x" }, schema), "a=5");
+});
