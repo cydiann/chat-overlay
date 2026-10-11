@@ -4,14 +4,16 @@ import { connectChat, backoffDelay } from "../js/twitch.js";
 
 class FakeSocket {
   static instances = [];
+  static OPEN = 1;
   constructor(url) {
     this.url = url;
+    this.readyState = 0;
     this.sent = [];
     FakeSocket.instances.push(this);
   }
   send(line) { this.sent.push(line); }
-  close() { this.onclose?.(); }
-  open() { this.onopen?.(); }
+  close() { this.closed = true; this.onclose?.(); }
+  open() { this.readyState = 1; this.onopen?.(); }
   receive(data) { this.onmessage?.({ data }); }
 }
 
@@ -19,11 +21,20 @@ function setup(channel = "Lennelen") {
   FakeSocket.instances = [];
   const events = [];
   const timers = [];
+  const cleared = [];
+  const ticks = [];
+  const stoppedTicks = [];
+  const clock = { t: 0 };
   const conn = connectChat(channel, ev => events.push(ev), {
     WebSocketImpl: FakeSocket,
     setTimer: (fn, ms) => timers.push({ fn, ms }),
+    clearTimer: id => cleared.push(id),
+    setTicker: (fn, ms) => ticks.push({ fn, ms }),
+    clearTicker: id => stoppedTicks.push(id),
+    now: () => clock.t,
   });
-  return { conn, events, timers, latest: () => FakeSocket.instances.at(-1) };
+  const tick = () => ticks.forEach(t => t.fn());
+  return { conn, events, timers, cleared, ticks, stoppedTicks, clock, tick, latest: () => FakeSocket.instances.at(-1) };
 }
 
 const ROOMSTATE = "@room-id=659811388 :tmi.twitch.tv ROOMSTATE #lennelen";
@@ -80,4 +91,61 @@ test("close() stops reconnecting", () => {
   const { conn, timers } = setup();
   conn.close();
   assert.equal(timers.length, 0);
+});
+
+test("close() during a pending reconnect cancels it", () => {
+  const { conn, timers, cleared, latest } = setup();
+  latest().close();
+  assert.equal(timers.length, 1);
+  conn.close();
+  assert.deepEqual(cleared, [1]);
+  timers[0].fn();
+  assert.equal(FakeSocket.instances.length, 1);
+});
+
+test("keepalive PING is sent every minute", () => {
+  const { ticks, tick, latest } = setup();
+  assert.deepEqual(ticks.map(t => t.ms), [60000]);
+  latest().open();
+  tick();
+  assert.equal(latest().sent.at(-1), "PING :keepalive");
+});
+
+test("keepalive is not sent before the socket is open", () => {
+  const { tick, latest } = setup();
+  tick();
+  assert.deepEqual(latest().sent, []);
+});
+
+test("traffic keeps the connection alive", () => {
+  const { clock, tick, timers, latest } = setup();
+  latest().open();
+  clock.t = 300000;
+  latest().receive(":tmi.twitch.tv PONG tmi.twitch.tv :keepalive\r\n");
+  clock.t = 400000;
+  tick();
+  assert.equal(latest().closed, undefined);
+  assert.equal(timers.length, 0);
+  assert.equal(latest().sent.at(-1), "PING :keepalive");
+});
+
+test("a silent connection is replaced by a new socket", () => {
+  const { clock, tick, timers, events, latest } = setup();
+  const stale = latest();
+  stale.open();
+  clock.t = 360001;
+  tick();
+  assert.equal(stale.closed, true);
+  assert.equal(stale.onmessage, null);
+  assert.equal(timers.length, 1);
+  timers[0].fn();
+  assert.equal(FakeSocket.instances.length, 2);
+  stale.receive(PRIVMSG);
+  assert.deepEqual(events, []);
+});
+
+test("close() stops the keepalive", () => {
+  const { conn, stoppedTicks } = setup();
+  conn.close();
+  assert.deepEqual(stoppedTicks, [1]);
 });
