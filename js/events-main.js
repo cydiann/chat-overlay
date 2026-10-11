@@ -96,6 +96,7 @@ async function startFollows(mine) {
     } catch (err) {
       console.warn("Event boxes: could not load the latest follower", err);
     }
+    if (mine !== session) return;
     eventsub = connectEventSub({
       token,
       clientId: CLIENT_ID,
