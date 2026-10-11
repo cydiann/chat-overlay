@@ -4,7 +4,7 @@ import { loadFont } from "./fonts.js";
 import { BOXES, mapFollow, mapUsernotice } from "./event-map.js";
 import { createBox, setTitle, setName, fitName } from "./boxes.js";
 import { createNameStore } from "./name-store.js";
-import { connectChat } from "./twitch.js";
+import { connectChat, backoffDelay } from "./twitch.js";
 import { connectEventSub } from "./eventsub.js";
 import { CLIENT_ID, tokenFromHash, validateToken } from "./auth.js";
 import { getUserId, getFollowers } from "./helix.js";
@@ -16,10 +16,23 @@ const row = document.getElementById("row");
 const slots = new Map(BOXES.map(key => [key, createBox(key)]));
 row.append(...slots.values());
 
-// Dev only: point EventSub at the Twitch CLI mock server.
+// Dev only: point EventSub at the Twitch CLI mock server. Never honor this from a non-local
+// host, since the eventsub/api params would otherwise send the token to any server.
+function localDevParam(value, label) {
+  if (!value) return undefined;
+  try {
+    const { hostname } = new URL(value);
+    if (hostname === "localhost" || hostname === "127.0.0.1") return value;
+  } catch {
+    // Falls through to the warning below.
+  }
+  console.warn(`Event boxes: ignoring ?${label}= (not localhost)`);
+  return undefined;
+}
+
 const dev = new URLSearchParams(location.search);
-const eventsubUrl = dev.get("eventsub") || undefined;
-const eventsubApi = dev.get("api") || undefined;
+const eventsubUrl = localDevParam(dev.get("eventsub"), "eventsub");
+const eventsubApi = localDevParam(dev.get("api"), "api");
 const token = tokenFromHash(location.hash);
 
 let config = null;
@@ -28,6 +41,7 @@ let chat = null;
 let eventsub = null;
 let demo = null;
 let validateTimer = null;
+let followRetryTimer = null;
 let session = 0;
 
 function applyConfig(next) {
@@ -59,7 +73,8 @@ function stop() {
   eventsub?.close();
   demo?.stop();
   clearInterval(validateTimer);
-  chat = eventsub = demo = validateTimer = null;
+  clearTimeout(followRetryTimer);
+  chat = eventsub = demo = validateTimer = followRetryTimer = null;
 }
 
 function start() {
@@ -78,48 +93,68 @@ function start() {
   startFollows(session);
 }
 
-async function startFollows(mine) {
+// A transient failure (network blip, Twitch hiccup) retries with backoff; a definitive "this
+// token cannot do this" answer (401/403, or a null/expired validate) logs and stops instead.
+function retryFollows(mine, attempt, err) {
+  if (mine !== session) return;
+  console.warn("Event boxes: follower setup failed, retrying", err);
+  followRetryTimer = setTimeout(() => startFollows(mine, attempt + 1), backoffDelay(attempt));
+}
+
+async function startFollows(mine, attempt = 0) {
+  let me;
   try {
-    const me = await validateToken(token);
-    if (mine !== session) return;
-    if (!me) {
-      console.warn("Event boxes: Twitch login expired or revoked, log in again on the settings page");
+    me = await validateToken(token);
+  } catch (err) {
+    retryFollows(mine, attempt, err);
+    return;
+  }
+  if (mine !== session) return;
+  if (!me) {
+    console.warn("Event boxes: Twitch login expired or revoked, log in again on the settings page");
+    return;
+  }
+  const api = { token, clientId: CLIENT_ID };
+  let broadcasterId;
+  try {
+    broadcasterId = await getUserId(config.channel, api);
+  } catch (err) {
+    if (err.status === 401 || err.status === 403) {
+      console.warn("Event boxes: follower setup failed", err);
       return;
     }
-    const api = { token, clientId: CLIENT_ID };
-    const broadcasterId = await getUserId(config.channel, api);
-    if (mine !== session) return;
-    try {
-      const { name } = await getFollowers(broadcasterId, api);
-      if (mine !== session) return;
-      if (name) show({ box: "follower", name }, false);
-    } catch (err) {
-      console.warn("Event boxes: could not load the latest follower", err);
-    }
-    if (mine !== session) return;
-    eventsub = connectEventSub({
-      token,
-      clientId: CLIENT_ID,
-      broadcasterId,
-      moderatorId: me.userId,
-      onNotification: payload => show(mapFollow(payload)),
-      url: eventsubUrl,
-      apiBase: eventsubApi,
-    });
-    validateTimer = setInterval(async () => {
-      try {
-        if (await validateToken(token)) return;
-        console.warn("Event boxes: Twitch login expired, follower updates stopped");
-        eventsub?.close();
-        eventsub = null;
-        clearInterval(validateTimer);
-      } catch {
-        // Network blip; try again next hour.
-      }
-    }, VALIDATE_MS);
-  } catch (err) {
-    console.warn("Event boxes: follower setup failed", err);
+    retryFollows(mine, attempt, err);
+    return;
   }
+  if (mine !== session) return;
+  try {
+    const { name } = await getFollowers(broadcasterId, api);
+    if (mine !== session) return;
+    if (name) show({ box: "follower", name }, false);
+  } catch (err) {
+    console.warn("Event boxes: could not load the latest follower", err);
+  }
+  if (mine !== session) return;
+  eventsub = connectEventSub({
+    token,
+    clientId: CLIENT_ID,
+    broadcasterId,
+    moderatorId: me.userId,
+    onNotification: payload => show(mapFollow(payload)),
+    url: eventsubUrl,
+    apiBase: eventsubApi,
+  });
+  validateTimer = setInterval(async () => {
+    try {
+      if (await validateToken(token)) return;
+      console.warn("Event boxes: Twitch login expired, follower updates stopped");
+      eventsub?.close();
+      eventsub = null;
+      clearInterval(validateTimer);
+    } catch {
+      // Network blip; try again next hour.
+    }
+  }, VALIDATE_MS);
 }
 
 window.addEventListener("message", e => {
