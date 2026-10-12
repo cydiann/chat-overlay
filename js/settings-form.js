@@ -35,8 +35,7 @@ function readInput(field, input) {
   return input.value;
 }
 
-// `fragment()` returns a "#..." suffix that must never go into the query string (the events overlay's token).
-export function mountSettings({ schema, overlay, preview: previewPage, fragment = () => "", onChange = () => {} }) {
+export function mountSettings({ schema, overlay, preview: previewPage, onChange = () => {} }) {
   const form = document.getElementById("form");
   const preview = document.getElementById("preview");
   const output = document.getElementById("obs-url");
@@ -50,7 +49,7 @@ export function mountSettings({ schema, overlay, preview: previewPage, fragment 
   function obsUrl() {
     const query = liveQuery();
     const base = new URL(overlay, location.href).href;
-    return (query ? `${base}?${query}` : base) + fragment();
+    return query ? `${base}?${query}` : base;
   }
 
   function updatePreview() {
@@ -60,7 +59,7 @@ export function mountSettings({ schema, overlay, preview: previewPage, fragment 
   function update() {
     output.value = obsUrl();
     const query = liveQuery();
-    history.replaceState(null, "", (query ? `?${query}` : location.pathname) + fragment());
+    history.replaceState(null, "", query ? `?${query}` : location.pathname);
     updatePreview();
     onChange(values);
   }

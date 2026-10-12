@@ -26,17 +26,13 @@ Four boxes showing the latest follower, new subscriber, sub gifter and resub.
 ### Setup
 
 1. Install the MoonTime font on the streaming PC (the font file is not in this repo; it is a licensed font). Without it the titles fall back to Neonderthaw.
-2. Open the settings page and click **Connect Twitch**. Log in with an account that moderates the channel. The status line confirms it can read the channel's followers.
-3. Click **Copy OBS URL**. In OBS: Sources > + > Browser, paste the URL, Width 1700, Height 330.
-4. Subs, gifts and resubs work without a login. Only the follower box needs it.
-
-The OBS URL carries the login token after the `#`. Browsers never send that part to the server, so GitHub Pages never sees it, but don't show the URL on stream. Twitch logins from this page expire after a while; when the status line says so, connect again and paste the new URL into OBS.
+2. Open the settings page, adjust the look, and click **Copy OBS URL**. In OBS: Sources > + > Browser, paste the URL, Width 1700, Height 330.
 
 Resubs only show up when the viewer shares the resub message in chat. That is how Twitch reports them.
 
-The sub, gifter and resub boxes also load the latest names from LennBot at startup (the **Recent events URL** setting, on by default), so they survive a cleared OBS browser cache. LennBot records every sub, gift and resub in the channel, even while the overlay is closed. A cached name is replaced only when LennBot's is newer. Clear the setting to turn this off.
+All four boxes come from LennBot (the **Recent events URL** setting, on by default): it records every follow, sub, gift and resub in the channel, even while the overlay is closed. The overlay loads them at startup and asks again every 10 seconds, so the boxes survive a cleared OBS browser cache and need no Twitch login. Subs, gifts and resubs also arrive instantly from chat. A name is replaced only by a newer one. Older OBS URLs that end in `#token=...` still work; that part is ignored.
 
-The Twitch app behind the login is `chat-overlay` in the Twitch developer console. Its OAuth redirect URLs must include `https://cydiann.github.io/chat-overlay/events-settings.html` and `http://localhost:8000/events-settings.html`.
+LennBot receives follows through the `chat-overlay` app in the Twitch developer console, using its client secret (`TWITCH_EVENTS_CLIENT_SECRET` on Railway). Don't delete that app. If you generate a new secret, update it on Railway and restart LennBot.
 
 ## Development
 
@@ -49,7 +45,6 @@ node --test                   # unit tests, no dependencies
 - Settings: http://localhost:8000/settings.html
 - Event boxes: http://localhost:8000/events.html?demo=1&bg=1
 - Event boxes settings: http://localhost:8000/events-settings.html
-- Sub, gift and resub boxes can be watched without a login by setting the channel to a big streamer; those notices arrive every few minutes.
-- Follows without waiting for real ones: run the Twitch CLI mock (`nix shell nixpkgs#twitch-cli -c twitch event websocket start-server`), then load `events.html?eventsub=ws://127.0.0.1:8080/ws&api=http://127.0.0.1:8080#token=<your token>` and fire `twitch event trigger channel.follow --transport=websocket`. The token is still validated against Twitch, so use a real one from the settings page.
+- Sub, gift and resub boxes can be watched live by setting the channel to a big streamer; those notices arrive every few minutes.
 
 Every setting is defined once in `js/schema.js` (`js/events-schema.js` for the event boxes overlay); the overlay's URL parsing and the settings form are both generated from it.
