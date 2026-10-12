@@ -39,7 +39,8 @@ test("eventsCssVars maps values to custom properties", () => {
   assert.equal(vars["--name-font"], '"Quicksand"');
   assert.equal(vars["--name-size"], "22px");
   assert.equal(vars["--title-size"], "44px");
-  assert.equal(vars["--fill-a"], "#ab97b2");
+  assert.equal(vars["--fill-a"], "rgba(171, 151, 178, 1)");
+  assert.equal(vars["--fill-b"], "rgba(162, 147, 204, 1)");
   assert.equal(vars["--shadow"], "rgba(60, 40, 90, 0.16)");
 });
 
@@ -52,4 +53,13 @@ test("history defaults to LennBot and can be turned off", () => {
   assert.equal(d().history, "https://lennbot-production.up.railway.app/event-boxes");
   const off = { ...d(), history: "" };
   assert.equal(parseConfig("?" + serializeConfig(off, EVENTS_SCHEMA), EVENTS_SCHEMA).history, "");
+});
+
+test("fill opacity fades both fill colors and survives a URL round trip", () => {
+  const values = { ...d(), fillopacity: 50 };
+  const vars = eventsCssVars(values);
+  assert.equal(vars["--fill-a"], "rgba(171, 151, 178, 0.5)");
+  assert.equal(vars["--fill-b"], "rgba(162, 147, 204, 0.5)");
+  assert.deepEqual(parseConfig("?" + serializeConfig(values, EVENTS_SCHEMA), EVENTS_SCHEMA), values);
+  assert.equal(parseConfig("?fillopacity=150", EVENTS_SCHEMA).fillopacity, 100);
 });
