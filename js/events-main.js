@@ -30,7 +30,7 @@ function applyConfig(next) {
   loadFont(config.namefont);
   document.body.classList.toggle("preview", config.bg);
   for (const key of BOXES) setTitle(slots.get(key), titleFor(config, key));
-  if (!prev || prev.channel !== config.channel || prev.demo !== config.demo) start();
+  if (!prev || prev.channel !== config.channel || prev.demo !== config.demo || prev.history !== config.history) start();
   else refit();
 }
 

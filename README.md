@@ -32,7 +32,7 @@ Resubs only show up when the viewer shares the resub message in chat. That is ho
 
 All four boxes come from LennBot (the **Recent events URL** setting, on by default): it records every follow, sub, gift and resub in the channel, even while the overlay is closed. The overlay loads them at startup and asks again every 10 seconds, so the boxes survive a cleared OBS browser cache and need no Twitch login. Subs, gifts and resubs also arrive instantly from chat. A name is replaced only by a newer one. Older OBS URLs that end in `#token=...` still work; that part is ignored.
 
-LennBot receives follows through the `chat-overlay` app in the Twitch developer console, using its client secret (`TWITCH_EVENTS_CLIENT_SECRET` on Railway). Don't delete that app. If you generate a new secret, update it on Railway and restart LennBot.
+LennBot receives follows through the `chat-overlay` app in the Twitch developer console, using its client secret (`TWITCH_EVENTS_CLIENT_SECRET` on Railway). Don't delete that app. If you generate a new secret, update it on Railway and restart LennBot. That app's OAuth redirect URLs must keep `https://cydiann.github.io/chat-overlay/events-settings.html`, because LennBot's re-authorize link (logged if Twitch ever refuses the follow subscription) sends the broadcaster there.
 
 ## Development
 
