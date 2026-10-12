@@ -1,11 +1,6 @@
 export const BOXES = ["follower", "subscriber", "gifter", "resub"];
 export const ANON_LOGIN = "ananonymousgifter";
 
-export function mapFollow(payload) {
-  const name = payload?.event?.user_name;
-  return payload?.subscription?.type === "channel.follow" && name ? { box: "follower", name } : null;
-}
-
 function gifterName(ev) {
   return ev.login === ANON_LOGIN ? "Anonymous" : ev.displayName;
 }

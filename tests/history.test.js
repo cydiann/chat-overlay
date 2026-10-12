@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mergeHistory, fetchHistory } from "../js/history.js";
+import { mergeHistory, fetchHistory, createWarnOnce } from "../js/history.js";
 
 const T = "2026-10-12T18:04:11.123456+00:00";
 const T_MS = Date.parse(T);
@@ -36,9 +36,15 @@ test("missing boxes, bad dates and empty names are skipped", () => {
   assert.deepEqual(mergeHistory({}, null), []);
 });
 
-test("follower and unknown boxes are ignored", () => {
-  const remote = { follower: { name: "f", updated_at: T }, raider: { name: "r", updated_at: T } };
-  assert.deepEqual(mergeHistory({}, remote), []);
+test("follower is merged like the other boxes", () => {
+  const remote = { follower: { name: "beronelol", updated_at: T } };
+  assert.deepEqual(mergeHistory({ follower: { name: "old", at: 0 } }, remote), [
+    { box: "follower", name: "beronelol", at: T_MS },
+  ]);
+});
+
+test("unknown boxes are ignored", () => {
+  assert.deepEqual(mergeHistory({}, { raider: { name: "r", updated_at: T } }), []);
 });
 
 test("fetchHistory returns the parsed body and sets a timeout signal", async () => {
@@ -56,4 +62,16 @@ test("fetchHistory returns the parsed body and sets a timeout signal", async () 
 test("fetchHistory rejects on a non-2xx status", async () => {
   const fetchImpl = async () => ({ ok: false, status: 500, json: async () => ({}) });
   await assert.rejects(fetchHistory("https://example.test/event-boxes", { fetchImpl }), /500/);
+});
+
+test("createWarnOnce warns on the first failure and again only after a success", () => {
+  const seen = [];
+  const warn = createWarnOnce(err => seen.push(err));
+  warn.fail("a");
+  warn.fail("b");
+  warn.ok();
+  warn.ok();
+  warn.fail("c");
+  warn.fail("d");
+  assert.deepEqual(seen, ["a", "c"]);
 });

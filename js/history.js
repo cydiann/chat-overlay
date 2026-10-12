@@ -1,6 +1,6 @@
-// LennBot records the latest sub, gifter and resub so the boxes survive a cleared cache
-// (Twitch has no history API for them). The follower box recovers from Helix instead.
-const HISTORY_BOXES = ["subscriber", "gifter", "resub"];
+// LennBot records the latest follower, sub, gifter and resub, so the boxes survive a cleared
+// cache and the follower box needs no Twitch login here.
+const HISTORY_BOXES = ["follower", "subscriber", "gifter", "resub"];
 
 export function mergeHistory(cached, remote) {
   const updates = [];
@@ -17,4 +17,20 @@ export async function fetchHistory(url, { fetchImpl = fetch, timeoutMs = 5000 } 
   const res = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs) });
   if (!res.ok) throw new Error(`Event history request failed with HTTP ${res.status}`);
   return res.json();
+}
+
+// Polling every few seconds would otherwise log the same failure over and over while LennBot
+// restarts; this logs the first failure and stays quiet until a request works again.
+export function createWarnOnce(log) {
+  let armed = true;
+  return {
+    fail(err) {
+      if (!armed) return;
+      armed = false;
+      log(err);
+    },
+    ok() {
+      armed = true;
+    },
+  };
 }

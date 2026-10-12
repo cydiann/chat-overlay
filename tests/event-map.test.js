@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BOXES, mapFollow, mapUsernotice } from "../js/event-map.js";
+import { BOXES, mapUsernotice } from "../js/event-map.js";
 
 const notice = (msgId, extra = {}) => ({
   type: "usernotice", msgId, login: "cometcass", displayName: "CometCass", communityGiftId: "", ...extra,
@@ -9,13 +9,6 @@ const anon = { login: "ananonymousgifter", displayName: "AnAnonymousGifter" };
 
 test("boxes are in display order", () => {
   assert.deepEqual(BOXES, ["follower", "subscriber", "gifter", "resub"]);
-});
-
-test("mapFollow reads channel.follow notifications", () => {
-  const payload = { subscription: { type: "channel.follow" }, event: { user_name: "MoonlitMara", user_login: "moonlitmara" } };
-  assert.deepEqual(mapFollow(payload), { box: "follower", name: "MoonlitMara" });
-  assert.equal(mapFollow({ subscription: { type: "channel.raid" }, event: { user_name: "x" } }), null);
-  assert.equal(mapFollow(undefined), null);
 });
 
 test("sub and resub go to their boxes", () => {
